@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios';
 import Pagination from "./Pagination";
 
+
 interface Flags {
     svg: string;
     png: string;
@@ -71,6 +72,7 @@ interface CountryType {
 const Countries = () => {
     const [countries, setCountries] = useState<CountryType[]>([]);
     const [filteredCountries, setFilteredCountries] = useState<CountryType[]>([]);
+    const [searhCountries, setSearhCountries] = useState<CountryType[]>([]);
     const [updateState, setUpdateState] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] =useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -82,7 +84,12 @@ const Countries = () => {
     const currentItem = countries.slice(indexOffirstItems, indexOfLastItems);
     const currentFilteredItem = filteredCountries.slice(indexOffirstItems, indexOfLastItems);
 
-
+    String.prototype.turkishToLower = function(){
+        var string = this;
+        var letters: { [key: string]: string; } = { "İ": "i", "I": "ı", "Ş": "ş", "Ğ": "ğ", "Ü": "ü", "Ö": "ö", "Ç": "ç"};
+        string = string.replace(/(([İIŞĞÜÇÖ]))/g, function(letter){ return letters[letter]; })
+        return string.toLowerCase();
+    }
 
     const paginate = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -92,10 +99,10 @@ const Countries = () => {
         try {
             const { data } = await axios.get<CountryType[]>(`https://restcountries.com/v2/all`);
             setCountries(data);
+            console.log("istek atıldı");
         } catch {
             console.log("Ülke verisi alınırken bir hata oluştu");
         }
-        
     }
     useEffect(() => {
         getData();
@@ -125,13 +132,49 @@ const Countries = () => {
         setCountries(countries.sort((a,b) => a.area > b.area ? -1 : 1));
     }
 
+    const searchAll = () => {
+    let arr: any = [];
+    countries.filter((country) => {
+        return country.name.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.alpha2Code.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.alpha3Code.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.subregion.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.region.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.population.toString().includes(searchQuery.toString()) ||
+        country.demonym.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.nativeName.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.numericCode.turkishToLower().includes(searchQuery.turkishToLower()) ||
+        country.flag.turkishToLower().includes(searchQuery.turkishToLower()) 
+    }).map((counrty) => {
+        return arr.push(counrty)
+    });
+    setSearhCountries(arr);
+    setUpdateState(!updateState);
+    }
+
+    const searchCapital = () => {
+        let arr: any = [];
+        filteredCountries.filter((country) => {
+            return country.capital.turkishToLower().includes(searchQuery.turkishToLower());
+        }).map((counrty) => {
+             arr.push(counrty)
+        });
+        setSearhCountries(arr);
+        setUpdateState(!updateState);
+    }
 
   return (
     <div className="container mt-5 mb-5">
         <div className="row justify-content-center aling-items-center">
-          <div className="col-5">
-            <div className="input-group flex-nowrap">
-              <input type="text" onChange={(e) => {setSearchQuery(e.target.value)}} className="form-control" placeholder="Ara" aria-label="Ara" aria-describedby="addon-wrapping" />
+          <div className="col-4">
+            <div className="input-group flex-nowrap ">
+              <input type="text" onChange={(e) => {setSearchQuery(e.target.value); searchAll();}} className="form-control" placeholder="Ara" aria-label="Ara" aria-describedby="addon-wrapping" />
+              <span className="input-group-text" id="addon-wrapping"><i className="ri-search-line"></i></span>
+            </div>
+          </div>
+          <div className="col-4">
+            <div className="input-group flex-nowrap ">
+              <input type="text" onChange={(e) => {setSearchQuery(e.target.value); searchCapital();}} className="form-control" placeholder="Başkente göre ara" aria-label="Ara" aria-describedby="addon-wrapping" />
               <span className="input-group-text" id="addon-wrapping"><i className="ri-search-line"></i></span>
             </div>
           </div>
@@ -190,9 +233,7 @@ const Countries = () => {
                         })
                      ) : 
                      (
-                        filteredCountries.filter((country)=>{
-                            return country.capital.toLowerCase().includes(searchQuery)
-                        }).map((country, index)=>{
+                        searhCountries.map((country, index)=>{
                             return (
                                 <tr className='tablerow' key={index}>
                                 <th scope="row"> {index + 1} </th>
@@ -204,7 +245,6 @@ const Countries = () => {
                             )
                         })
                      )}
-                    
                 </tbody>
             </table>
             </div>
