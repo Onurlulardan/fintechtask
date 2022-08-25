@@ -78,6 +78,9 @@ const Countries = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [itemPerPage, setItemPerPage] = useState<number>(10);
 
+    // const [regionalBlocs, setRegionalBlocs] = useState<RegionalBloc[]>([]);
+
+
     const paginationNumber = countries.length / 10;
     const indexOfLastItems = currentPage * itemPerPage;
     const indexOffirstItems = indexOfLastItems - itemPerPage;
@@ -99,6 +102,15 @@ const Countries = () => {
         try {
             const { data } = await axios.get<CountryType[]>(`https://restcountries.com/v2/all`);
             setCountries(data);
+            // let regArr: any = [];
+            // data.filter((item) => {
+            //     if(item.regionalBlocs !== undefined){
+            //         item.regionalBlocs.map((reg)=> {
+            //             return regArr.push(reg)
+            //         })
+            //     }
+            //     setRegionalBlocs(regArr)
+            // });
             console.log("istek atıldı");
         } catch {
             console.log("Ülke verisi alınırken bir hata oluştu");
@@ -132,30 +144,42 @@ const Countries = () => {
         setCountries(countries.sort((a,b) => a.area > b.area ? -1 : 1));
     }
 
-    const searchAll = () => {
-    let arr: any = [];
-    countries.filter((country) => {
-        return country.name.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.alpha2Code.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.alpha3Code.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.subregion.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.region.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.population.toString().includes(searchQuery.toString()) ||
-        country.demonym.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.nativeName.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.numericCode.turkishToLower().includes(searchQuery.turkishToLower()) ||
-        country.flag.turkishToLower().includes(searchQuery.turkishToLower()) 
-    }).map((counrty) => {
-        return arr.push(counrty)
-    });
-    setSearhCountries(arr);
-    setUpdateState(!updateState);
-    }
+    const searchAll = (event: string) => {
+        setSearchQuery(event);
+        let arr: any = [];
+        countries.filter((country) => {
+            return country.name.turkishToLower().includes(event.turkishToLower()) ||
+            country.alpha2Code.turkishToLower().includes(event.turkishToLower()) ||
+            country.alpha3Code.turkishToLower().includes(event.turkishToLower()) ||
+            country.subregion.turkishToLower().includes(event.turkishToLower()) ||
+            country.region.turkishToLower().includes(event.turkishToLower()) ||
+            country.population.toString().includes(event.toString()) ||
+            country.demonym.turkishToLower().includes(event.turkishToLower()) ||
+            country.nativeName.turkishToLower().includes(event.turkishToLower()) ||
+            country.numericCode.turkishToLower().includes(event.turkishToLower()) ||
+            country.flag.turkishToLower().includes(event.turkishToLower()) ||
+            country.regionalBlocs?.find((item) => {
+                if(item.name.turkishToLower() === event.turkishToLower()){
+                    console.log(item.name)
+                    return item.name
+                }
+                if( item.acronym.turkishToLower() === event.turkishToLower() ) {
+                    console.log(item.acronym)
+                    return item.acronym
+                }
+            })
+        }).map((counrty) => {
+            return arr.push(counrty)
+        });
+        setSearhCountries(arr);
+        setUpdateState(!updateState);
+        }
 
-    const searchCapital = () => {
+    const searchCapital = (event: string) => {
+        setSearchQuery(event)
         let arr: any = [];
         filteredCountries.filter((country) => {
-            return country.capital.turkishToLower().includes(searchQuery.turkishToLower());
+            return country.capital.turkishToLower().includes(event.turkishToLower());
         }).map((counrty) => {
              arr.push(counrty)
         });
@@ -168,13 +192,13 @@ const Countries = () => {
         <div className="row justify-content-center aling-items-center">
           <div className="col-4">
             <div className="input-group flex-nowrap ">
-              <input type="text" onChange={(e) => {setSearchQuery(e.target.value); searchAll();}} className="form-control" placeholder="Ara" aria-label="Ara" aria-describedby="addon-wrapping" />
+              <input type="text" onChange={(e) => {searchAll(e.target.value)}} className="form-control" placeholder="Ara" aria-label="Ara" aria-describedby="addon-wrapping" />
               <span className="input-group-text" id="addon-wrapping"><i className="ri-search-line"></i></span>
             </div>
           </div>
           <div className="col-4">
             <div className="input-group flex-nowrap ">
-              <input type="text" onChange={(e) => {setSearchQuery(e.target.value); searchCapital();}} className="form-control" placeholder="Başkente göre ara" aria-label="Ara" aria-describedby="addon-wrapping" />
+              <input type="text" onChange={(e) => {searchCapital(e.target.value)}} className="form-control" placeholder="Başkente göre ara" aria-label="Ara" aria-describedby="addon-wrapping" />
               <span className="input-group-text" id="addon-wrapping"><i className="ri-search-line"></i></span>
             </div>
           </div>
