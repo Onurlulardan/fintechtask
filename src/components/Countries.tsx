@@ -71,28 +71,17 @@ interface CountryType {
 
 const Countries = () => {
     const [countries, setCountries] = useState<CountryType[]>([]);
-    const [filteredCountries, setFilteredCountries] = useState<CountryType[]>([]);
     const [searhCountries, setSearhCountries] = useState<CountryType[]>([]);
     const [updateState, setUpdateState] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] =useState<string>("");
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [itemPerPage, setItemPerPage] = useState<number>(10);
 
-    // const [regionalBlocs, setRegionalBlocs] = useState<RegionalBloc[]>([]);
-
-
     const paginationNumber = countries.length / 10;
     const indexOfLastItems = currentPage * itemPerPage;
     const indexOffirstItems = indexOfLastItems - itemPerPage;
     const currentItem = countries.slice(indexOffirstItems, indexOfLastItems);
-    const currentFilteredItem = filteredCountries.slice(indexOffirstItems, indexOfLastItems);
 
-    String.prototype.turkishToLower = function(){
-        var string = this;
-        var letters: { [key: string]: string; } = { "İ": "i", "I": "ı", "Ş": "ş", "Ğ": "ğ", "Ü": "ü", "Ö": "ö", "Ç": "ç"};
-        string = string.replace(/(([İIŞĞÜÇÖ]))/g, function(letter){ return letters[letter]; })
-        return string.toLowerCase();
-    }
 
     const paginate = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -102,15 +91,6 @@ const Countries = () => {
         try {
             const { data } = await axios.get<CountryType[]>(`https://restcountries.com/v2/all`);
             setCountries(data);
-            // let regArr: any = [];
-            // data.filter((item) => {
-            //     if(item.regionalBlocs !== undefined){
-            //         item.regionalBlocs.map((reg)=> {
-            //             return regArr.push(reg)
-            //         })
-            //     }
-            //     setRegionalBlocs(regArr)
-            // });
             console.log("istek atıldı");
         } catch {
             console.log("Ülke verisi alınırken bir hata oluştu");
@@ -119,14 +99,6 @@ const Countries = () => {
     useEffect(() => {
         getData();
     }, []);
-
-    const splitCountries = () => {
-        const filteredArr =  countries.filter((item) =>  item.capital !== undefined);
-        setFilteredCountries(filteredArr);
-    }
-    useEffect(() => {
-        splitCountries();
-    }, [countries]);
 
     const ascName = ()=> {
         setCountries(countries.sort((a,b) => a.name > b.name ? 1 : -1));
@@ -148,38 +120,70 @@ const Countries = () => {
         setSearchQuery(event);
         let arr: any = [];
         countries.filter((country) => {
-            return country.name.turkishToLower().includes(event.turkishToLower()) ||
-            country.alpha2Code.turkishToLower().includes(event.turkishToLower()) ||
-            country.alpha3Code.turkishToLower().includes(event.turkishToLower()) ||
-            country.subregion.turkishToLower().includes(event.turkishToLower()) ||
-            country.region.turkishToLower().includes(event.turkishToLower()) ||
+            return country.name.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.alpha2Code.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.alpha3Code.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.subregion.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.region.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
             country.population.toString().includes(event.toString()) ||
-            country.demonym.turkishToLower().includes(event.turkishToLower()) ||
-            country.nativeName.turkishToLower().includes(event.turkishToLower()) ||
-            country.numericCode.turkishToLower().includes(event.turkishToLower()) ||
-            country.flag.turkishToLower().includes(event.turkishToLower()) ||
+            country.demonym.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.nativeName.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.numericCode.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
             country.regionalBlocs?.find((item) => {
-                if(item.name.turkishToLower() === event.turkishToLower()){
-                    console.log(item.name)
+                return  item.name.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim()) ||
+                item.acronym.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) ||
+            country.topLevelDomain?.find((item) => {
+                    return item.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) ||
+            country.callingCodes?.find((item) => {
+                    return item.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) ||
+            country.altSpellings?.find((item) => {
+                    return item.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) ||
+            country.latlng?.find((item) => {
+                    return item.toString().includes(event.toString().trim())
+            }) ||
+            country.timezones?.find((item) => {
+                    return item.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) || 
+            country.borders?.find((item) => {
+                    return item.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) || 
+            country.currencies?.find((item) => {
+                    return item.code.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim()) ||
+                    item.name.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim()) ||
+                    item.symbol.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim())
+            }) || 
+            country.languages?.find((item) => {
+                if(item.iso639_1 === event.toLocaleLowerCase().trim()){
+                    return item.iso639_1
+                }
+                if(item.iso639_2 === event.toLocaleLowerCase().trim()) {
+                    return item.iso639_2
+                }
+                if(item.name.toLocaleLowerCase() === event.toLocaleLowerCase().trim()) {
                     return item.name
                 }
-                if( item.acronym.turkishToLower() === event.turkishToLower() ) {
-                    console.log(item.acronym)
-                    return item.acronym
+                if(item.nativeName === event.toLocaleLowerCase().trim()) {
+                    return item.nativeName
                 }
-            })
+            }) ||
+            country.flags.png.toLocaleLowerCase().includes(event.toLocaleLowerCase()) ||
+            country.flags.svg.toLocaleLowerCase().includes(event.toLocaleLowerCase()) 
         }).map((counrty) => {
             return arr.push(counrty)
         });
         setSearhCountries(arr);
         setUpdateState(!updateState);
-        }
+    }
 
     const searchCapital = (event: string) => {
         setSearchQuery(event)
         let arr: any = [];
-        filteredCountries.filter((country) => {
-            return country.capital.turkishToLower().includes(event.turkishToLower());
+        countries.filter((country) => {
+            return country.capital?.toLocaleLowerCase().includes(event.toLocaleLowerCase().trim());
         }).map((counrty) => {
              arr.push(counrty)
         });
@@ -214,7 +218,6 @@ const Countries = () => {
                         <li><a className="dropdown-item" onClick={(e) => {ascPopulation(); setUpdateState(!updateState)}} href={void(0)}>Nüfüsa göre</a></li>
                         <li><a className="dropdown-item" onClick={(e) => {ascArea(); setUpdateState(!updateState)}} href={void(0)}>Yüz ölçümüne göre</a></li>
                     </ul>
-                    <button className="btn btn-danger mx-1" onClick={(e) => {getData()}} type="submit">Filtreyi temizle</button>
                 </div> 
             </div>
         </div>
